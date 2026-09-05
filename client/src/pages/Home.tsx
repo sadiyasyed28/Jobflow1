@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocation } from "wouter";
 import {
@@ -35,6 +35,7 @@ import { RecruiterContactCard } from "@/components/RecruiterContactCard";
 import { InterviewScheduler } from "@/components/InterviewScheduler";
 import { UpcomingInterviewsWidget } from "@/components/UpcomingInterviewsWidget";
 import { ResumeStudio } from "@/components/ResumeStudio";
+import { CustomSelect } from "@/components/CustomSelect";
 import { toast } from "sonner";
 import {
   useJobflow,
@@ -232,38 +233,69 @@ function Dashboard({
   const [showChecklist, setShowChecklist] = useState(!dismissedChecklist);
   return (
     <>
-      <section className="hero-grid">
-        <Spotlight className="hero-copy">
-          <div className="eyebrow">
-            {meta.dashboard.eyebrow}
-            <span className="live-dot" />
+      <section className="top-insights-grid">
+        <div className="card insights-card">
+          <div className="card-kicker">
+            <span className="lime-mark">
+              <Sparkles size={14} />
+            </span>{" "}
+            AI career insights{" "}
+            <Badge className="sample-badge">Illustrative sample</Badge>
           </div>
-          <HeadlineStagger>{meta.dashboard.title}</HeadlineStagger>
-          <p>{meta.dashboard.sub}</p>
-          <div className="hero-actions">
-            <Button
-              className="button button--lime"
-              onClick={() =>
-                go(setLocation, setTab, resumes.length ? "readiness" : "resume")
-              }
-            >
-              {resumes.length ? "Review readiness" : "Upload your resume"}
-              <ArrowUpRight size={16} />
-            </Button>
-            <button
-              className="text-link"
-              onClick={() => go(setLocation, setTab, "applications")}
-            >
-              Review weekly progress <ArrowUpRight size={14} />
-            </button>
+          <div className="insight">
+            <div className="insight-number">01</div>
+            <div>
+              <h3>Turn your strongest proof into a sharper story.</h3>
+              <p>
+                Once your resume is connected, Jobflow can identify the evidence
+                worth carrying into your next application.
+              </p>
+            </div>
           </div>
-        </Spotlight>
-        <div className="hero-art parallax-slow">
-          <img src={desk} alt="Editorial career planning desk" />
-          <div className="hero-art__stamp">
-            01
-            <br />
-            <span>signal / 26</span>
+          <button
+            className="insight-link"
+            onClick={() => go(setLocation, setTab, "copilot")}
+          >
+            Discuss with Copilot <ArrowUpRight size={15} />
+          </button>
+        </div>
+        <div className="card actions-card">
+          <div className="card-kicker">
+            Recommended actions{" "}
+            <span className="muted">A short list, not a backlog</span>
+          </div>
+          <div className="action-list">
+            {[
+              [
+                "Upload your resume",
+                "Give Jobflow something real to work from.",
+                "resume",
+              ],
+              [
+                "Set a target role",
+                "Make skill recommendations specific.",
+                "gaps",
+              ],
+              [
+                "Define your search",
+                "Location, salary, and work style.",
+                "settings",
+              ],
+            ].map(([a, b, k]) => (
+              <button
+                key={a}
+                onClick={() => go(setLocation, setTab, k as TabKey)}
+              >
+                <span className="action-icon">
+                  <Target size={16} />
+                </span>
+                <span>
+                  <b>{a}</b>
+                  <small>{b}</small>
+                </span>
+                <ArrowUpRight size={16} />
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -435,70 +467,6 @@ function Dashboard({
           />
         </div>
         <UpcomingInterviewsWidget setTab={setTab} setLocation={setLocation} />
-        <div className="card insights-card">
-          <div className="card-kicker">
-            <span className="lime-mark">
-              <Sparkles size={14} />
-            </span>{" "}
-            AI career insights{" "}
-            <Badge className="sample-badge">Illustrative sample</Badge>
-          </div>
-          <div className="insight">
-            <div className="insight-number">01</div>
-            <div>
-              <h3>Turn your strongest proof into a sharper story.</h3>
-              <p>
-                Once your resume is connected, Jobflow can identify the evidence
-                worth carrying into your next application.
-              </p>
-            </div>
-          </div>
-          <button
-            className="insight-link"
-            onClick={() => go(setLocation, setTab, "copilot")}
-          >
-            Discuss with Copilot <ArrowUpRight size={15} />
-          </button>
-        </div>
-      </section>
-      <section className="card actions-card">
-        <div className="card-kicker">
-          Recommended actions{" "}
-          <span className="muted">A short list, not a backlog</span>
-        </div>
-        <div className="action-list">
-          {[
-            [
-              "Upload your resume",
-              "Give Jobflow something real to work from.",
-              "resume",
-            ],
-            [
-              "Set a target role",
-              "Make skill recommendations specific.",
-              "gaps",
-            ],
-            [
-              "Define your search",
-              "Location, salary, and work style.",
-              "settings",
-            ],
-          ].map(([a, b, k]) => (
-            <button
-              key={a}
-              onClick={() => go(setLocation, setTab, k as TabKey)}
-            >
-              <span className="action-icon">
-                <Target size={16} />
-              </span>
-              <span>
-                <b>{a}</b>
-                <small>{b}</small>
-              </span>
-              <ArrowUpRight size={16} />
-            </button>
-          ))}
-        </div>
       </section>
     </>
   );
@@ -540,14 +508,23 @@ function Copilot() {
             <span className="avatar avatar--lime">
               <Sparkles size={18} />
             </span>
-            <div>
+            <div className="copilot-thread-main">
               <b>Jobflow Copilot</b>
-              {thread.messages.map((m, i) => (
-                <p key={i} className={m.role === "user" ? "copilot-user" : ""}>
-                  {m.text}
-                </p>
-              ))}
-              {thinking && <ThinkingDots />}
+              <div className="chat-messages-list">
+                {thread.messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`chat-row ${m.role === "user" ? "chat-row--user" : "chat-row--assistant"}`}
+                  >
+                    <div
+                      className={`chat-bubble ${m.role === "user" ? "chat-bubble--user" : "chat-bubble--assistant"}`}
+                    >
+                      {m.text}
+                    </div>
+                  </div>
+                ))}
+                {thinking && <ThinkingDots />}
+              </div>
             </div>
           </div>
           <div className="suggestion-row">
@@ -633,6 +610,31 @@ function Copilot() {
     </div>
   );
 }
+const MATCH_SCORES: Record<string, number> = {
+  northstar: 92,
+  archive: 84,
+  fieldnotes: 76,
+  cortex: 94,
+  apexlabs: 91,
+  pulsemedia: 88,
+  luminary: 85,
+  velocity: 82,
+  craftware: 79,
+  zenith: 75,
+  beacon: 72,
+  orbitai: 68,
+  hyperion: 65,
+  strata: 62,
+};
+const getMatchScore = (id: string) => MATCH_SCORES[id] ?? 70;
+
+const formatSalaryRange = (salary: number) => {
+  const lakhs = salary / 100000;
+  const min = Math.max(1, Math.round(lakhs * 0.85));
+  const max = Math.round(lakhs * 1.15);
+  return `₹${min}L – ₹${max}L`;
+};
+
 function Jobs({
   setTab,
   setLocation,
@@ -663,8 +665,7 @@ function Jobs({
     )
     .sort((a, b) =>
       sort === "Match"
-        ? (b.id === "northstar" ? 92 : b.id === "archive" ? 84 : 76) -
-          (a.id === "northstar" ? 92 : a.id === "archive" ? 84 : 76)
+        ? getMatchScore(b.id) - getMatchScore(a.id)
         : sort === "Salary"
           ? b.salary - a.salary
           : 0
@@ -711,7 +712,8 @@ function Jobs({
                 >
                   <div>
                     <small className="muted">Salary</small>
-                    <br />${Math.round(j.salary / 1000)}k
+                    <br />
+                    {formatSalaryRange(j.salary)}
                   </div>
                   <div>
                     <small className="muted">Location</small>
@@ -726,10 +728,7 @@ function Jobs({
                   <div>
                     <small className="muted">Match</small>
                     <br />
-                    <strong>
-                      {j.id === "northstar" ? 92 : j.id === "archive" ? 84 : 76}
-                      %
-                    </strong>
+                    <strong>{getMatchScore(j.id)}%</strong>
                   </div>
                   <div>
                     <small className="muted">Skills</small>
@@ -760,44 +759,44 @@ function Jobs({
             placeholder="Search roles, skills, or companies"
           />
         </div>
-        <select
+        <CustomSelect
           className="filter-button"
           value={remote}
           onChange={e => setRemote(e.target.value)}
         >
-          <option>All</option>
+          <option value="All">All work styles</option>
           <option>Remote</option>
           <option>Hybrid</option>
           <option>On-site</option>
-        </select>
-        <select
+        </CustomSelect>
+        <CustomSelect
           className="filter-button"
           value={exp}
           onChange={e => setExp(e.target.value)}
         >
-          <option>All</option>
+          <option value="All">All experience levels</option>
           <option>Entry</option>
           <option>Mid</option>
           <option>Senior</option>
-        </select>
-        <select
+        </CustomSelect>
+        <CustomSelect
           className="filter-button"
           value={salary}
           onChange={e => setSalary(e.target.value)}
         >
           <option value="All">Salary</option>
-          <option value="100000">$100k+</option>
-          <option value="130000">$130k+</option>
-          <option value="140000">$140k+</option>
-        </select>
-        <select
+          <option value="1000000">₹10L+</option>
+          <option value="1500000">₹15L+</option>
+          <option value="2000000">₹20L+</option>
+        </CustomSelect>
+        <CustomSelect
           className="filter-button"
           value={sort}
           onChange={e => setSort(e.target.value)}
         >
           <option value="Match">Sort: Match score</option>
           <option value="Salary">Sort: Salary</option>
-        </select>
+        </CustomSelect>
       </div>
       <div className="workspace-grid workspace-grid--jobs">
         <div>
@@ -864,13 +863,11 @@ function Jobs({
                   <span>{j.company}</span>
                   <b>{j.role}</b>
                   <small>
-                    {j.place} · {j.remote} · ${Math.round(j.salary / 1000)}k
+                    {j.place} · {j.remote} · {formatSalaryRange(j.salary)}
                   </small>
                 </div>
                 <div className="job-match">
-                  <strong>
-                    {j.id === "northstar" ? 92 : j.id === "archive" ? 84 : 76}%
-                  </strong>
+                  <strong>{getMatchScore(j.id)}%</strong>
                   <span>match</span>
                 </div>
                 <button
@@ -950,6 +947,10 @@ function Applications({
   const [pick, setPick] = useState(c.jobs[0]?.id || "");
   const [selected, setSelected] = useState<string | null>(null);
 
+  const [openMenuStage, setOpenMenuStage] = useState<string | null>(null);
+  const [targetStageForAdd, setTargetStageForAdd] = useState<Application["stage"] | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ jobId: string; stage: Application["stage"] } | null>(null);
+
   useEffect(() => {
     if (location && location.startsWith("applications/")) {
       const parts = location.split("/");
@@ -962,6 +963,50 @@ function Applications({
       }
     }
   }, [location, c]);
+
+  useEffect(() => {
+    if (pendingMove) {
+      const newlyAdded = c.applications.find(a => a.jobId === pendingMove.jobId);
+      if (newlyAdded) {
+        if (newlyAdded.stage !== pendingMove.stage) {
+          c.moveApplication(newlyAdded.id, pendingMove.stage);
+        }
+        setPendingMove(null);
+      }
+    }
+  }, [c.applications, pendingMove]);
+
+  useEffect(() => {
+    if (!openMenuStage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenMenuStage(null);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".kanban-menu-container")) {
+        setOpenMenuStage(null);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuStage]);
+
+  const handleAddApplication = (jobIdToAdd: string, stageOverride?: Application["stage"]) => {
+    if (c.applications.some(a => a.jobId === jobIdToAdd)) {
+      toast.error("That job is already in your pipeline");
+      return;
+    }
+    const destStage = stageOverride || targetStageForAdd || "Saved";
+    c.addApplication(jobIdToAdd);
+    if (destStage !== "Saved") {
+      setPendingMove({ jobId: jobIdToAdd, stage: destStage });
+    }
+    toast.success(`Application added to ${destStage}`);
+    setTargetStageForAdd(null);
+  };
 
   const stages: [Application["stage"], string][] = [
     ["Saved", "Saved"],
@@ -985,7 +1030,7 @@ function Applications({
           >
             {view === "kanban" ? "List view" : "Kanban view"}
           </button>
-          <select
+          <CustomSelect
             className="filter-button"
             value={pick}
             onChange={e => setPick(e.target.value)}
@@ -995,19 +1040,12 @@ function Applications({
                 {j.role}
               </option>
             ))}
-          </select>
+          </CustomSelect>
           <Button
             className="button button--ink"
-            onClick={() => {
-              if (c.applications.some(a => a.jobId === pick)) {
-                toast.error("That job is already in your pipeline");
-                return;
-              }
-              c.addApplication(pick);
-              toast.success("Application added to Saved");
-            }}
+            onClick={() => handleAddApplication(pick)}
           >
-            <Plus size={16} /> Add application
+            <Plus size={16} /> Add application{targetStageForAdd ? ` to ${targetStageForAdd}` : ""}
           </Button>
         </div>
       </div>
@@ -1033,25 +1071,49 @@ function Applications({
               <div className="kanban-head">
                 <span>{stage}</span>
                 <b>{c.applications.filter(a => a.stage === stage).length}</b>
-                <button
-                  className="icon-button"
-                  style={{
-                    padding: 0,
-                    minWidth: "auto",
-                    background: "none",
-                    marginLeft: "auto",
-                  }}
-                  onClick={() => {
-                    setPick(c.jobs[0]?.id || "");
-                    (
-                      document.querySelector(
-                        "select.filter-button"
-                      ) as HTMLElement
-                    )?.focus();
-                  }}
-                >
-                  <MoreHorizontal size={15} />
-                </button>
+                <div className="kanban-menu-container">
+                  <button
+                    className="icon-button"
+                    style={{
+                      padding: 0,
+                      minWidth: "auto",
+                      background: "none",
+                    }}
+                    aria-label={`Menu for ${stage} stage`}
+                    onClick={() => setOpenMenuStage(openMenuStage === stage ? null : stage)}
+                  >
+                    <MoreHorizontal size={15} />
+                  </button>
+                  {openMenuStage === stage && (
+                    <div className="kanban-menu">
+                      <button
+                        onClick={() => {
+                          setTargetStageForAdd(stage);
+                          setOpenMenuStage(null);
+                          toast.info(`Pick a job above to add to ${stage}`);
+                          (
+                            document.querySelector(
+                              "select.filter-button"
+                            ) as HTMLElement
+                          )?.focus();
+                        }}
+                      >
+                        <Plus size={14} /> Add application to this stage
+                      </button>
+                      <button
+                        onClick={() => {
+                          const appsInStage = c.applications.filter(a => a.stage === stage);
+                          const destStage = stage === "Saved" ? "Applied" : "Saved";
+                          appsInStage.forEach(a => c.moveApplication(a.id, destStage));
+                          setOpenMenuStage(null);
+                          toast.success(`Moved ${appsInStage.length} application(s) to ${destStage}`);
+                        }}
+                      >
+                        <Layers3 size={14} /> Move all to {stage === "Saved" ? "Applied" : "Saved"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               {c.applications
                 .filter(a => a.stage === stage)
@@ -1106,41 +1168,83 @@ function Applications({
           ))}
         </div>
       ) : (
-        <div className="card job-list">
-          {c.applications.map(a => {
-            const j = c.jobs.find(x => x.id === a.jobId);
+        <>
+          <div className="card job-list" style={{ marginTop: "18px" }}>
+            {c.applications.map(a => {
+              const j = c.jobs.find(x => x.id === a.jobId);
+              return (
+                <button
+                  className="job-row"
+                  key={a.id}
+                  onClick={() => {
+                    c.setViewedJob(a.jobId);
+                    setSelected(a.id);
+                  }}
+                >
+                  <div className="job-copy">
+                    <b>{j?.role}</b>
+                    <small>
+                      {j?.company} · {a.stage}
+                    </small>
+                  </div>
+                  <ArrowUpRight size={16} />
+                </button>
+              );
+            })}
+            {!c.applications.length && (
+              <Empty
+                title="No applications yet"
+                copy="Add your first application to begin tracking."
+                action="Add application"
+                onAction={() =>
+                  (
+                    document.querySelector("select.filter-button") as HTMLElement
+                  )?.focus()
+                }
+              />
+            )}
+          </div>
+          {(() => {
+            const unapplied = c.jobs
+              .filter(j => !c.applications.some(a => a.jobId === j.id))
+              .slice(0, 4);
+            if (!unapplied.length) return null;
             return (
-              <button
-                className="job-row"
-                key={a.id}
-                onClick={() => {
-                  c.setViewedJob(a.jobId);
-                  setSelected(a.id);
-                }}
+              <div
+                className="card recommended-jobs-panel"
+                style={{ marginTop: "24px" }}
               >
-                <div className="job-copy">
-                  <b>{j?.role}</b>
-                  <small>
-                    {j?.company} · {a.stage}
-                  </small>
+                <div className="card-kicker" style={{ marginBottom: "15px" }}>
+                  Recommended jobs to apply to{" "}
+                  <span className="muted">{unapplied.length} available</span>
                 </div>
-                <ArrowUpRight size={16} />
-              </button>
+                <div className="job-list" style={{ border: 0, padding: 0 }}>
+                  {unapplied.map(j => (
+                    <div
+                      className="job-row"
+                      key={j.id}
+                      style={{ cursor: "default" }}
+                    >
+                      <div className="job-copy">
+                        <b>{j.role}</b>
+                        <small>
+                          {j.company} · {j.place} ({j.remote})
+                        </small>
+                      </div>
+                      <button
+                        className="text-link"
+                        style={{ marginLeft: "auto" }}
+                        onClick={() => handleAddApplication(j.id)}
+                      >
+                        <Plus size={14} /> Add application
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             );
-          })}
-          {!c.applications.length && (
-            <Empty
-              title="No applications yet"
-              copy="Add your first application to begin tracking."
-              action="Add application"
-              onAction={() =>
-                (
-                  document.querySelector("select.filter-button") as HTMLElement
-                )?.focus()
-              }
-            />
-          )}
-        </div>
+          })()}
+        </>
       )}
       {selected && (
         <div className="card history-strip">
@@ -1257,7 +1361,7 @@ function Cover() {
           Draft setup{" "}
           <span className="muted">Uses only connected information</span>
         </div>
-        <select
+        <CustomSelect
           className="select-row"
           value={jobId}
           onChange={e => setJobId(e.target.value)}
@@ -1268,8 +1372,8 @@ function Cover() {
               {j.role} · {j.company}
             </option>
           ))}
-        </select>
-        <select
+        </CustomSelect>
+        <CustomSelect
           className="select-row"
           value={resumeId}
           onChange={e => setResumeId(e.target.value)}
@@ -1280,7 +1384,7 @@ function Cover() {
               {r.name}
             </option>
           ))}
-        </select>
+        </CustomSelect>
         <div className="cover-note">
           <Sparkles size={16} />
           <span>
@@ -1408,7 +1512,7 @@ function Gaps() {
     <div className="gaps-grid">
       <div className="card role-select">
         <div className="card-kicker">Target role</div>
-        <select
+        <CustomSelect
           className="select-row"
           value={target}
           onChange={e => c.setTargetRole(e.target.value)}
@@ -1416,7 +1520,7 @@ function Gaps() {
           <option>Product Designer</option>
           <option>UX Researcher</option>
           <option>Design Operations Lead</option>
-        </select>
+        </CustomSelect>
         <img src={pathArt} alt="Abstract career path" />
         <div className="img-caption">
           Gap logic updates from the selected role.
@@ -1454,18 +1558,18 @@ function Gaps() {
           <div>
             <span className="status-dot status-dot--blue" />
             <b>Improvement plan</b>
-            <small>
+            <div className="improvement-list">
               {[...missing, "Practice an evidence-led story"].map(s => (
                 <label key={s}>
                   <input
                     type="checkbox"
                     checked={c.gapDone.includes(s)}
                     onChange={() => c.toggleGap(s)}
-                  />{" "}
-                  {s}
+                  />
+                  <span>{s}</span>
                 </label>
               ))}
-            </small>
+            </div>
           </div>
         </div>
         <Button
@@ -1674,8 +1778,15 @@ function SettingsPage() {
     [locationPreference, setLocationPreference] = useState(
       c.locationPreference
     );
-  const { theme, toggleTheme } = useTheme();
   const [modal, setModal] = useState<"none" | "logout" | "delete">("none");
+  const suggestedRoles = [
+    "Product Designer",
+    "UX Researcher",
+    "Design Operations Lead",
+    "Senior UI/UX Designer",
+    "Product Manager",
+    "Design Systems Lead",
+  ];
   return (
     <div className="settings-grid">
       <nav className="settings-nav">
@@ -1740,6 +1851,18 @@ function SettingsPage() {
                 onChange={e => c.setTargetRole(e.target.value)}
               />
             </label>
+            <div className="role-chips">
+              {suggestedRoles.map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`role-chip ${c.targetRole === r ? "active" : ""}`}
+                  onClick={() => c.setTargetRole(r)}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
             <label>
               Location preference
               <Input
@@ -1762,28 +1885,28 @@ function SettingsPage() {
         {c.settingsTab === "AI controls" && (
           <>
             <h2>Keep the signal clear.</h2>
-            <label>
+            <label className="settings-checkbox-row">
               <input
                 type="checkbox"
                 checked={c.aiControls.showSamples}
                 onChange={e =>
                   c.setAiControls({ showSamples: e.target.checked })
                 }
-              />{" "}
-              Show illustrative sample labels
+              />
+              <span>Show illustrative sample labels</span>
             </label>
-            <label>
+            <label className="settings-checkbox-row">
               <input
                 type="checkbox"
                 checked={c.aiControls.useResumeContext}
                 onChange={e =>
                   c.setAiControls({ useResumeContext: e.target.checked })
                 }
-              />{" "}
-              Use resume context when available
+              />
+              <span>Use resume context when available</span>
             </label>
             <h2 style={{ marginTop: "30px" }}>Sound</h2>
-            <label>
+            <label className="settings-checkbox-row">
               <input
                 type="checkbox"
                 checked={c.soundEnabled}
@@ -1791,17 +1914,8 @@ function SettingsPage() {
                   c.setSoundEnabled(e.target.checked);
                   if (e.target.checked) sound.stamp();
                 }}
-              />{" "}
-              Enable subtle paper-thunk sound effects
-            </label>
-            <h2 style={{ marginTop: "30px" }}>Visual theme</h2>
-            <label>
-              <input
-                type="checkbox"
-                checked={theme === "dark"}
-                onChange={toggleTheme}
-              />{" "}
-              Dark mode active
+              />
+              <span>Enable subtle paper-thunk sound effects</span>
             </label>
             <Button
               className="button button--lime"
@@ -1814,7 +1928,7 @@ function SettingsPage() {
         {c.settingsTab === "Security & data" && (
           <>
             <h2>Your data, your call.</h2>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+            <div className="settings-actions-row">
               <Button
                 className="button button--ink"
                 onClick={() => {
@@ -1861,22 +1975,11 @@ function SettingsPage() {
                   r.readAsText(f);
                 }}
               />
-              <label
-                htmlFor="import-data"
-                className="button button--ink"
-                style={{
-                  cursor: "pointer",
-                  margin: 0,
-                  height: "38px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "0 15px",
-                }}
-              >
-                Import JSON
-              </label>
+              <Button className="button button--ink" asChild>
+                <label htmlFor="import-data">Import JSON</label>
+              </Button>
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div className="settings-actions-row">
               <Button
                 className="button button--ink"
                 onClick={() => setModal("logout")}
@@ -2039,7 +2142,24 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [notifsOpen, setNotifsOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const c = useJobflow();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifsOpen(false);
+      }
+    };
+    if (notifsOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifsOpen]);
+
   useEffect(() => {
     const next = meta[path] ? path : "dashboard";
     if (tab !== next) {
@@ -2064,11 +2184,7 @@ export default function Home() {
         return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        const term = prompt("Search Jobflow");
-        if (term?.trim()) {
-          setLocation(`/jobs?search=${encodeURIComponent(term.trim())}`);
-          setTab("jobs");
-        }
+        searchInputRef.current?.focus();
       }
       if (e.key === "?") {
         e.preventDefault();
@@ -2258,20 +2374,6 @@ export default function Home() {
               </button>
             </p>
           </div>
-          <div className="user-mini">
-            <span className="avatar">{c.profile.name?.[0] || "Y"}</span>
-            <span>
-              <b>{c.profile.name || "Your profile"}</b>
-              <small>Personal workspace</small>
-            </span>
-            <button
-              className="icon-button"
-              style={{ padding: 0, minWidth: "auto", background: "none" }}
-              onClick={() => go(setLocation, setTab, "settings")}
-            >
-              <MoreHorizontal size={16} />
-            </button>
-          </div>
         </div>
       </aside>
       {mobileOpen && (
@@ -2298,29 +2400,61 @@ export default function Home() {
             <b>{nav.find(n => n.key === tab)?.label || "Dashboard"}</b>
           </div>
           <div className="top-actions">
-            <button
+            <form
               className="top-search"
-              onClick={() => {
-                const term = prompt("Search Jobflow");
-                if (term?.trim()) {
+              onSubmit={e => {
+                e.preventDefault();
+                if (searchTerm.trim()) {
                   setLocation(
-                    `/jobs?search=${encodeURIComponent(term.trim())}`
+                    `/jobs?search=${encodeURIComponent(searchTerm.trim())}`
                   );
                   setTab("jobs");
                 }
               }}
+              onClick={() => searchInputRef.current?.focus()}
             >
               <Search size={16} />
-              <span>Search</span>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search jobs..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
               <kbd>⌘ K</kbd>
-            </button>
-            <button
-              className="icon-button"
-              onClick={() => toast.info("No new notifications.")}
-            >
-              <Bell size={18} />
-              <i />
-            </button>
+            </form>
+            <div className="notif-menu-container" ref={notifRef}>
+              <button
+                className="icon-button"
+                onClick={() => setNotifsOpen(x => !x)}
+                aria-label="Notifications"
+              >
+                <Bell size={18} />
+                <i />
+              </button>
+              {notifsOpen && (
+                <div className="notif-dropdown">
+                  <div className="notif-header">
+                    <span>Notifications</span>
+                    <Badge className="sample-badge">Illustrative sample</Badge>
+                  </div>
+                  <div className="notif-list">
+                    <div className="notif-item">
+                      <b>Product Designer application updated</b>
+                      <small>Moved to Interview stage · 10m ago</small>
+                    </div>
+                    <div className="notif-item">
+                      <b>New high match role found</b>
+                      <small>Northstar Labs (84% match) · 2h ago</small>
+                    </div>
+                    <div className="notif-item">
+                      <b>Resume analysis complete</b>
+                      <small>Score updated to 78 (+5 pts) · 1d ago</small>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               className="profile-button"
               onClick={() => go(setLocation, setTab, "settings")}

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useJobflow } from "@/contexts/JobflowContext";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { CustomSelect } from "./CustomSelect";
 
 // Common tech and business skills for keyword extraction
 const SKILL_KEYWORDS = [
@@ -142,11 +143,11 @@ export function CustomJobModal() {
             </div>
             <div className="grid gap-2">
               <label style={{ fontSize: "12px", color: "var(--muted)" }}>Type</label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={remote} onChange={e => setRemote(e.target.value as any)}>
+              <CustomSelect className="flex h-10 w-full rounded-md border border-input bg-background text-sm ring-offset-background" value={remote} onChange={e => setRemote(e.target.value as any)}>
                 <option value="Remote">Remote</option>
                 <option value="Hybrid">Hybrid</option>
                 <option value="On-site">On-site</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -156,11 +157,11 @@ export function CustomJobModal() {
             </div>
             <div className="grid gap-2">
               <label style={{ fontSize: "12px", color: "var(--muted)" }}>Experience</label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={experience} onChange={e => setExperience(e.target.value as any)}>
+              <CustomSelect className="flex h-10 w-full rounded-md border border-input bg-background text-sm ring-offset-background" value={experience} onChange={e => setExperience(e.target.value as any)}>
                 <option value="Entry">Entry</option>
                 <option value="Mid">Mid</option>
                 <option value="Senior">Senior</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
           <div className="grid gap-2">
