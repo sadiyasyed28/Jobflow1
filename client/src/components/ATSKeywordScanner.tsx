@@ -3,6 +3,7 @@ import { useJobflow } from "@/contexts/JobflowContext";
 import { Badge } from "@/components/ui/badge";
 import { Gauge, Plus, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { CustomSelect } from "./CustomSelect";
 
 export function ATSKeywordScanner({ resumeId }: { resumeId: string }) {
   const c = useJobflow();
@@ -59,12 +60,12 @@ export function ATSKeywordScanner({ resumeId }: { resumeId: string }) {
       </div>
 
       <div style={{ marginBottom: "15px", marginTop: "10px" }}>
-        <select className="select-row" value={jobId} onChange={e => setJobId(e.target.value)}>
+        <CustomSelect className="select-row" value={jobId} onChange={e => setJobId(e.target.value)}>
           <option value="">Select a target job...</option>
           {c.jobs.map(j => (
             <option key={j.id} value={j.id}>{j.role} · {j.company}</option>
           ))}
-        </select>
+        </CustomSelect>
       </div>
 
       {!analysis ? (

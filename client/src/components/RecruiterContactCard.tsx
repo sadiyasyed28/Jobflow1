@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useJobflow, type RecruiterContact } from "@/contexts/JobflowContext";
 import { Plus, Copy, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { CustomSelect } from "./CustomSelect";
 
 export function RecruiterContactCard({ appId, contacts = [] }: { appId: string, contacts?: RecruiterContact[] }) {
   const c = useJobflow();
@@ -67,8 +68,8 @@ export function RecruiterContactCard({ appId, contacts = [] }: { appId: string, 
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <b>{contact.name}</b>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <select 
-                  style={{ fontSize: "11px", padding: "2px", borderRadius: "4px" }}
+                <CustomSelect 
+                  style={{ fontSize: "11px", borderRadius: "4px" }}
                   value={contact.status} 
                   onChange={e => c.updateApplicationContact(appId, contact.id, { status: e.target.value as any })}
                 >
@@ -76,7 +77,7 @@ export function RecruiterContactCard({ appId, contacts = [] }: { appId: string, 
                   <option>Messaged</option>
                   <option>Replied</option>
                   <option>Coffee chat scheduled</option>
-                </select>
+                </CustomSelect>
                 <button className="icon-button" style={{ color: "var(--muted)", padding: 0 }} onClick={() => {c.deleteApplicationContact(appId, contact.id); toast.success("Contact deleted")}}>
                   <Trash2 size={14} />
                 </button>

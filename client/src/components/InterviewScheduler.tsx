@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useJobflow, type InterviewStage } from "@/contexts/JobflowContext";
 import { Plus, CalendarClock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { CustomSelect } from "./CustomSelect";
 
 export function InterviewScheduler({ appId, interviews = [] }: { appId: string, interviews?: InterviewStage[] }) {
   const c = useJobflow();
@@ -34,8 +35,8 @@ export function InterviewScheduler({ appId, interviews = [] }: { appId: string, 
 
       {adding && (
         <div style={{ border: "1px solid var(--rule)", padding: "10px", borderRadius: "8px", marginBottom: "15px", display: "grid", gap: "10px" }}>
-          <select 
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" 
+          <CustomSelect 
+            className="flex h-10 w-full rounded-md border border-input bg-background text-sm ring-offset-background" 
             value={type} 
             onChange={e => setType(e.target.value as any)}
           >
@@ -44,7 +45,7 @@ export function InterviewScheduler({ appId, interviews = [] }: { appId: string, 
             <option>Technical Assessment</option>
             <option>System Design</option>
             <option>Executive Final</option>
-          </select>
+          </CustomSelect>
           <Input type="datetime-local" value={date} onChange={e => setDate(e.target.value)} />
           <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
             <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
