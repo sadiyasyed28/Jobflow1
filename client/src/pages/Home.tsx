@@ -529,11 +529,10 @@ function Copilot() {
                     <div
                       className={`chat-bubble ${m.role === "user" ? "chat-bubble--user" : "chat-bubble--assistant"}`}
                     >
-                      {m.text}
+                      {m.role === "assistant" && !m.text ? <ThinkingDots /> : m.text}
                     </div>
                   </div>
                 ))}
-                {thinking && <ThinkingDots />}
               </div>
             </div>
           </div>

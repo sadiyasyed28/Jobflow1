@@ -1291,8 +1291,11 @@ export function JobflowProvider({ children }: { children: ReactNode }) {
                    if (x.id !== t.id) return x;
                    const messages = [...x.messages];
                    const lastMsg = messages[messages.length - 1];
-                   if (lastMsg && lastMsg.role === "assistant" && !lastMsg.text) {
-                     messages[messages.length - 1] = { ...lastMsg, text: displayError };
+                   if (lastMsg && lastMsg.role === "assistant") {
+                     messages[messages.length - 1] = {
+                       ...lastMsg,
+                       text: lastMsg.text ? `${lastMsg.text}\n\n[${displayError}]` : displayError,
+                     };
                    }
                    return { ...x, messages };
                  })

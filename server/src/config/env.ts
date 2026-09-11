@@ -28,7 +28,7 @@ const envSchema = z.object({
   // GROQ
   // ------------------------------------------
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required for Phase 7"),
-  GROQ_MODEL: z.string().default("llama3-8b-8192"),
+  GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
   // ------------------------------------------
   // SENTRY
   // ------------------------------------------
