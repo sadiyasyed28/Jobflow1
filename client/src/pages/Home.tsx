@@ -708,7 +708,19 @@ function Jobs({
   }, [resumeHash]);
 
   useEffect(() => {
-    const idsToFetch = filtered.map(j => j.id).filter(id => !matchMap[id]);
+    // Seed matchMap directly from any jobs that came with precomputed matchResult
+    const seedUpdates: Record<string, JobMatchState> = {};
+    filtered.forEach(j => {
+      if (j.matchResult && typeof j.matchResult.score === "number" && !matchMap[j.id]) {
+        seedUpdates[j.id] = { loading: false, score: j.matchResult.score };
+      }
+    });
+
+    if (Object.keys(seedUpdates).length > 0) {
+      setMatchMap(prev => ({ ...seedUpdates, ...prev }));
+    }
+
+    const idsToFetch = filtered.map(j => j.id).filter(id => !matchMap[id] && !seedUpdates[id]);
     if (idsToFetch.length === 0) return;
 
     setMatchMap(prev => {

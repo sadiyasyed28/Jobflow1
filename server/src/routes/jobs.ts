@@ -17,8 +17,77 @@ jobsRouter.get("/", async (req, res, next) => {
   try {
     const { db } = await import("../db/index.js");
     const { jobs: jobsTable } = await import("../db/schema/jobs.js");
+    const { resumes } = await import("../db/schema/resumes.js");
+    const { profiles } = await import("../db/schema/profiles.js");
+    const { users } = await import("../db/schema/users.js");
+    const { eq, desc } = await import("drizzle-orm");
+    const { calculateJobMatch } = await import("../lib/matching.js");
+
+    const userId = req.user?.jobflowId;
     const dbJobs = await db.select().from(jobsTable).limit(50);
-    return res.status(200).json({ jobs: dbJobs });
+
+    let combinedSkills: string[] = [];
+    let resumeText: string | null = null;
+    let targetRole: string | null = null;
+    let userTitle: string | null = null;
+
+    if (userId) {
+      const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const [latestResume] = await db
+        .select()
+        .from(resumes)
+        .where(eq(resumes.userId, userId))
+        .orderBy(desc(resumes.createdAt))
+        .limit(1);
+
+      let resumeSkills: string[] = [];
+      if (latestResume?.content && typeof latestResume.content === "object") {
+        const contentObj = latestResume.content as Record<string, any>;
+        if (Array.isArray(contentObj.skills)) {
+          resumeSkills = contentObj.skills.filter(s => typeof s === "string");
+        }
+      }
+
+      combinedSkills = Array.from(new Set([
+        ...(profile?.skills || []),
+        ...resumeSkills,
+      ]));
+      resumeText = latestResume?.text || null;
+      targetRole = profile?.targetRoles?.[0] || user?.targetRole || user?.title || null;
+      userTitle = profile?.headline || user?.title || null;
+    }
+
+    const hasUserData = combinedSkills.length > 0 || Boolean(resumeText && resumeText.trim().length > 0);
+
+    const enrichedJobs = dbJobs.map(job => {
+      let matchResult: any = null;
+      if (hasUserData) {
+        const computed = calculateJobMatch({
+          resumeText,
+          resumeSkills: combinedSkills,
+          targetRole,
+          userTitle,
+          jobRole: job.role,
+          jobSkills: job.skills,
+          jobCompany: job.company,
+        });
+        if (!computed.insufficientData) {
+          matchResult = {
+            score: computed.score,
+            matchedSkills: computed.matchedSkills,
+            missingSkills: computed.missingSkills,
+            breakdown: computed.breakdown,
+          };
+        }
+      }
+      return {
+        ...job,
+        matchResult,
+      };
+    });
+
+    return res.status(200).json({ jobs: enrichedJobs });
   } catch (error) {
     next(error);
   }
@@ -41,13 +110,19 @@ jobsRouter.get("/search", validate({ query: searchSchema }), async (req, res, ne
     let finalLocation = searchInput.location?.trim();
     let finalRemote: boolean | undefined = searchInput.remote;
 
-    // If query/location/remote omitted, use persisted user profile preferences
-    if (userId && (!finalQuery || !finalLocation || finalRemote === undefined)) {
-      const { db } = await import("../db/index.js");
-      const { profiles } = await import("../db/schema/profiles.js");
-      const { users } = await import("../db/schema/users.js");
-      const { eq } = await import("drizzle-orm");
+    const { db } = await import("../db/index.js");
+    const { profiles } = await import("../db/schema/profiles.js");
+    const { users } = await import("../db/schema/users.js");
+    const { resumes } = await import("../db/schema/resumes.js");
+    const { eq, desc } = await import("drizzle-orm");
+    const { calculateJobMatch } = await import("../lib/matching.js");
 
+    let combinedSkills: string[] = [];
+    let resumeText: string | null = null;
+    let targetRole: string | null = null;
+    let userTitle: string | null = null;
+
+    if (userId) {
       const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
@@ -60,6 +135,29 @@ jobsRouter.get("/search", validate({ query: searchSchema }), async (req, res, ne
       if (finalRemote === undefined && profile?.remotePreference != null) {
         finalRemote = profile.remotePreference;
       }
+
+      const [latestResume] = await db
+        .select()
+        .from(resumes)
+        .where(eq(resumes.userId, userId))
+        .orderBy(desc(resumes.createdAt))
+        .limit(1);
+
+      let resumeSkills: string[] = [];
+      if (latestResume?.content && typeof latestResume.content === "object") {
+        const contentObj = latestResume.content as Record<string, any>;
+        if (Array.isArray(contentObj.skills)) {
+          resumeSkills = contentObj.skills.filter(s => typeof s === "string");
+        }
+      }
+
+      combinedSkills = Array.from(new Set([
+        ...(profile?.skills || []),
+        ...resumeSkills,
+      ]));
+      resumeText = latestResume?.text || null;
+      targetRole = profile?.targetRoles?.[0] || user?.targetRole || user?.title || null;
+      userTitle = profile?.headline || user?.title || null;
     }
 
     const resolvedSearch = {
@@ -76,17 +174,46 @@ jobsRouter.get("/search", validate({ query: searchSchema }), async (req, res, ne
     const result = await providerRegistry.search(resolvedSearch);
 
     if (result.error && result.jobs.length === 0) {
-      // If we got nothing back and an error was thrown, return 503 Service Unavailable
       return next(new ApiError(503, "PROVIDER_FAILED", result.error));
     }
 
     // 2. Deduplicate and save to database
-    // Even if we just found them, we upsert them into our canonical jobs table
     await upsertJobs(result.jobs);
 
-    // 3. Return the results
+    // 3. Attach match scores to each returned job
+    const hasUserData = combinedSkills.length > 0 || Boolean(resumeText && resumeText.trim().length > 0);
+    const enrichedJobs = result.jobs.map(job => {
+      const jobRoleName = (job as any).role || job.title;
+      let matchResult: any = null;
+      if (hasUserData) {
+        const computed = calculateJobMatch({
+          resumeText,
+          resumeSkills: combinedSkills,
+          targetRole,
+          userTitle,
+          jobRole: jobRoleName,
+          jobSkills: job.skills,
+          jobCompany: job.company,
+        });
+        if (!computed.insufficientData) {
+          matchResult = {
+            score: computed.score,
+            matchedSkills: computed.matchedSkills,
+            missingSkills: computed.missingSkills,
+            breakdown: computed.breakdown,
+          };
+        }
+      }
+      return {
+        ...job,
+        role: jobRoleName,
+        matchResult,
+      };
+    });
+
+    // 4. Return the results
     return res.status(200).json({
-      jobs: result.jobs,
+      jobs: enrichedJobs,
       total: result.total,
       page: result.page,
       source_fallback: result.error ? true : false,

@@ -75,7 +75,14 @@ export class CopilotService {
       text.includes("search jobs") ||
       text.includes("search internships") ||
       text.includes("internships for me") ||
-      text.includes("jobs for me")
+      text.includes("jobs for me") ||
+      text.includes("suggest some jobs") ||
+      text.includes("suggest jobs") ||
+      text.includes("what jobs are possible") ||
+      text.includes("can we get any jobs") ||
+      text.includes("any jobs for me") ||
+      text.includes("recommend jobs") ||
+      text.includes("recommended jobs")
     ) {
       return "JOB_SEARCH";
     }
@@ -111,7 +118,7 @@ export class CopilotService {
       return "PERSONAL_PROFILE";
     }
 
-    // 3. Match score intent
+    // 3. Match score and resume matching intent
     if (
       text.includes("match score") ||
       text.includes("best match") ||
@@ -125,6 +132,13 @@ export class CopilotService {
       text.includes("tell me about this job") ||
       text.includes("why should i apply") ||
       text.includes("why shouldn't i apply") ||
+      text.includes("check if we can get any jobs") ||
+      text.includes("match my resume") ||
+      text.includes("matching my resume") ||
+      text.includes("what is possible and what is not") ||
+      text.includes("what is possible") ||
+      text.includes("skills gap") ||
+      text.includes("skill gap") ||
       (jobId && (text.includes("match") || text.includes("score") || text.includes("fit") || text.includes("apply")))
     ) {
       return "JOB_MATCHING";
@@ -229,12 +243,17 @@ export class CopilotService {
       }
 
       case "JOB_MATCHING": {
-        contextData.profile = await copilotContextService.getProfileContext(jobflowId);
+        const profileContext = await copilotContextService.getProfileContext(jobflowId);
+        contextData.profile = profileContext;
         contextData.resume = await copilotContextService.getResumeContext(jobflowId);
         if (jobId) {
           contextData.job = await copilotContextService.getJobContext(jobId);
         }
         contextData.match = await copilotContextService.getJobMatchContext(jobflowId, jobId);
+
+        // Also fetch candidate job opportunities so Copilot can suggest real matching jobs
+        const targetQuery = profileContext.targetRole || (contextData.resume.skills && contextData.resume.skills.length > 0 ? contextData.resume.skills.slice(0, 2).join(" ") : "Software Engineer");
+        contextData.searchResults = await copilotContextService.searchJobsContext(targetQuery, profileContext.location || "");
         return contextData;
       }
 

@@ -105,6 +105,19 @@ export type ProfileCompleteness = {
   missingItems: string[];
   breakdown: Record<string, number>;
 };
+export type JobMatchResult = {
+  score: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  breakdown?: {
+    skillMatchPercentage: number;
+    roleAlignmentScore: number;
+    matchedCount: number;
+    totalRequiredCount: number;
+    roleAlignment: string;
+  };
+};
+
 export type Job = {
   id: string;
   company: string;
@@ -117,6 +130,7 @@ export type Job = {
   url: string;
   saved: boolean;
   custom?: boolean;
+  matchResult?: JobMatchResult | null;
 };
 export type RecruiterContact = {
   id: string;
